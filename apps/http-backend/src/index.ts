@@ -1,44 +1,64 @@
 import express from "express";
-import jwt from 'jsonwebtoken'
+import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import { middleware } from "./middleware.js";
-import { CreateRoomSchema, CreateSigninSchema, CreateUserSchema } from "@repo/common/types";
+import {
+  CreateRoomSchema,
+  CreateSigninSchema,
+  CreateUserSchema,
+} from "@repo/common/types";
+import { prismaClient } from "@repo/db";
 const app = express();
+app.use(express.json())
 
-app.listen(3001, () => console.log("App is listening to the port 3000"))
+app.listen(3001, () => console.log("App is listening to the port 3000"));
 
-app.post('/signup' , (req,res) => {
-    const data = CreateUserSchema.safeParse(req.body)
-    if(!data.success) {
-        return res.json({
-            message: "Incorrect Input"
-        })
-    }
-    res.json({
-        userId : 123
-    })
-})
-
-app.post('/signin' , (req,res) => {
-     const data = CreateSigninSchema.safeParse(req.body)
-    if(!data.success) {
-        return res.json({
-            message: "Incorrect Input"
-        })
-    }
-
-    const token = jwt.sign(username, JWT_SECRET);
-
+app.post("/signup", async (req, res) => {
+  const parsedData = CreateUserSchema.safeParse(req.body);
+  if (!parsedData.success) {
     return res.json({
-        message: token
-    })
-})
+      message: "Incorrect Input",
+    });
+  }
+  try {
+  await prismaClient.user.create({
+    data: {
+      email: parsedData.data.email,
+      name: parsedData.data.username,
+      password: parsedData.data.password,
+    },
+  });
 
-app.post('/room' , middleware, (req,res) => {
-     const data = CreateRoomSchema.safeParse(req.body)
-    if(!data.success) {
-        return res.json({
-            message: "Incorrect Input"
-        })
-    }
-})
+  return res.status(200).json({
+    data : parsedData.data
+  });
+} catch(e: any) {
+    return res.json({
+        error: e
+    })
+}
+});
+
+// app.post("/signin", (req, res) => {
+//   const data = CreateSigninSchema.safeParse(req.body);
+//   if (!data.success) {
+//     return res.json({
+//       message: "Incorrect Input",
+//     });
+//   }
+
+//   const token = jwt.sign(username, JWT_SECRET);
+
+//   return res.json({
+//     message: token,
+//   });
+// });
+
+app.post("/room", middleware, (req, res) => {
+  const data = CreateRoomSchema.safeParse(req.body);
+  if (!data.success) {
+    return res.json({
+      message: "Incorrect Input",
+    });
+  }
+});
