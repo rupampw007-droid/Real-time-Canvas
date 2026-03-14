@@ -1,3 +1,4 @@
+import { prismaClient } from "@repo/db";
 import express from "express";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "@repo/backend-common/config";
@@ -7,9 +8,10 @@ import {
   CreateSigninSchema,
   CreateUserSchema,
 } from "@repo/common/types";
-import { prismaClient } from "@repo/db";
+
 const app = express();
 app.use(express.json())
+
 
 app.listen(3001, () => console.log("App is listening to the port 3000"));
 
@@ -20,6 +22,7 @@ app.post("/signup", async (req, res) => {
       message: "Incorrect Input",
     });
   }
+  console.log(parsedData.data)
   try {
   await prismaClient.user.create({
     data: {
@@ -33,9 +36,10 @@ app.post("/signup", async (req, res) => {
     data : parsedData.data
   });
 } catch(e: any) {
-    return res.json({
-        error: e
-    })
+  console.log(e)
+  return res.status(400).json({
+    error: e.message
+  })
 }
 });
 
