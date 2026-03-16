@@ -1,12 +1,13 @@
-import { Request, Response, NextFunction } from "express"
+import { Response, NextFunction } from "express"
 import jwt from 'jsonwebtoken'
 import { JWT_SECRET } from "@repo/backend-common/config";
+import { AuthRequest } from "./types/types.js";
 
-export const middleware = (req: Request, res: Response, next: NextFunction ) => {
+
+export const middleware = (req: AuthRequest, res: Response, next: NextFunction ) => {
     const token = req.headers["authorization"] ?? "";
-    const decoded = jwt.verify(token, JWT_SECRET)
+    const decoded = jwt.verify(token, JWT_SECRET) as {userId : string}
     if(decoded) {
-        //@ts-ignore
         req.userId = decoded.userId
         next();
     }
