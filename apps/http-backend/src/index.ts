@@ -83,24 +83,29 @@ app.post("/signin", async (req, res) => {
   }
 });
 
-app.post("/room", middleware,async (req: AuthRequest, res) => {
+app.post("/room", middleware, async (req: AuthRequest, res) => {
   const parsedData = CreateRoomSchema.safeParse(req.body);
   if (!parsedData.success) {
     return res.json({
       message: "Incorrect Input",
     });
   }
-  const userId = req.userId
-  if(!userId) {
+  const userId = req.userId;
+  if (!userId) {
     return res.status(403).json({
-      message: "User is not authorized"
-    })
+      message: "User is not authorized",
+    });
   }
+try {
   await prismaClient.room.create({
     data: {
       slug: parsedData.data.slug,
-      adminId: userId 
-    }
+      adminId: userId,
+    },
+  });
+} catch(e) {
+  res.json({
+    message: "Room already exists"
   })
-
+}
 });
